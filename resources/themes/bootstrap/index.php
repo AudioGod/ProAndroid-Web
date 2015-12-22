@@ -4,7 +4,7 @@
 
     <head>
 
-        <title>Directory listing of <?php echo $lister->getListedPath(); ?></title>
+        <title>ProAndroid-Firmwares</title>
         <link rel="shortcut icon" href="<?php echo THEMEPATH; ?>/img/folder.png">
 
         <!-- STYLES -->
@@ -21,11 +21,12 @@
         <link rel="stylesheet" type="text/css"  href="//fonts.googleapis.com/css?family=Cutive+Mono">
 
         <!-- META -->
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+		
         <meta charset="utf-8">
 
         <?php file_exists('analytics.inc') ? include('analytics.inc') : false; ?>
-
+     <!--<center><img src="Banner URL"></center>-->
     </head>
 
     <body>
@@ -86,32 +87,35 @@
 
             <div id="directory-list-header">
                 <div class="row">
-                    <div class="col-md-7 col-sm-6 col-xs-10">File</div>
-                    <div class="col-md-2 col-sm-2 col-xs-2 text-right">Size</div>
-                    <div class="col-md-3 col-sm-4 hidden-xs text-right">Last Modified</div>
+                    <div class="col-lg-5 ">File</div>
+                    <div class="col-lg-2 ">Size</div>
+                    <div class="col-lg-2 ">Downloads</div>
+                    <div class="col-lg-3 ">Last Modified</div>
                 </div>
             </div>
 
             <ul id="directory-listing" class="nav nav-pills nav-stacked">
 
-                <?php foreach($dirArray as $name => $fileInfo): ?>
-                    <li data-name="<?php echo $name; ?>" data-href="<?php echo $fileInfo['url_path']; ?>">
-                        <a href="<?php echo $fileInfo['url_path']; ?>" class="clearfix" data-name="<?php echo $name; ?>">
-
-
+               <?php $x = 1; foreach($dirArray as $name => $fileInfo): ?>
+        <li class="<?php echo $x %2 == 0 ? 'even' : 'odd'; ?>" data-name="<?php echo $name; ?>" data-href="<?php echo $fileInfo['file_path']; ?>">
+            <a href="<?php if(is_dir($fileInfo['file_path'])) { echo '?dir=' . $fileInfo['file_path']; } 
+				 elseif($fileInfo['icon_class'] == 'fa-level-up') { echo  $fileInfo['file_path']; }
+					else { echo 'download.php?file='. $fileInfo['file_path']; } ?>" class="clearfix">
                             <div class="row">
-                                <span class="file-name col-md-7 col-sm-6 col-xs-9">
+                                <span class="file-name col-lg-5">
                                     <i class="fa <?php echo $fileInfo['icon_class']; ?> fa-fw"></i>
                                     <?php echo $name; ?>
                                 </span>
-
-                                <span class="file-size col-md-2 col-sm-2 col-xs-3 text-right">
+                                <span class="file-size col-lg-2">
                                     <?php echo $fileInfo['file_size']; ?>
-                                </span>
-
-                                <span class="file-modified col-md-3 col-sm-4 hidden-xs text-right">
+                                </span>	
+								<span class="file-download col-lg-2">
+                                	<?php echo $fileInfo['file_downloads']; ?>
+                                </span> 
+                                <span class="file-modified col-lg-3">
                                     <?php echo $fileInfo['mod_time']; ?>
                                 </span>
+								 
                             </div>
 
                         </a>
@@ -125,7 +129,7 @@
                         <?php endif; ?>
 
                     </li>
-                <?php endforeach; ?>
+                <?php $x++; endforeach; ?>
 
             </ul>
         </div>

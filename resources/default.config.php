@@ -18,7 +18,8 @@ return array(
         'resources/*',
         'analytics.inc',
         'header.php',
-        'footer.php'
+        'footer.php',
+        'download.php'
     ),
 
     // If set to 'true' an directory with an index file (as defined below) will

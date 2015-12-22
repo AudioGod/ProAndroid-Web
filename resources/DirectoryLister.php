@@ -26,6 +26,7 @@ class DirectoryLister {
     protected $_config        = null;
     protected $_fileTypes     = null;
     protected $_systemMessage = null;
+	protected $_logFile		  = NULL;
 
 
     /**
@@ -54,8 +55,19 @@ class DirectoryLister {
             die('ERROR: Missing application config file at ' . $configFile);
         }
 
+	// Load the log file
+        $log = $this->_appDir . '/log';
+        
+		// Set the config file to a global variable
+		if (file_exists($log) && is_writable($log)) {
+			$this->_logFile = $log;
+		} else {
+			$this->setSystemMessage('error', '<b>ERROR:</b> Unable to locate log file');
+		}
+
         // Set the file types array to a global variable
         $this->_fileTypes = require_once($this->_appDir . '/fileTypes.php');
+		//$this->_directory = $this->_setDirecoryPath(@$_GET['dir']);
 
         // Set the theme name
         $this->_themeName = $this->_config['theme_name'];
@@ -346,7 +358,22 @@ class DirectoryLister {
             return false;
         }
     }
-
+    
+	/**
+	 * Get total download count.
+	 * 
+	 * @return download number
+     * @access public
+     */	
+	public function getTotalDownloads() {
+	
+		// Get fresh download count data
+		$dllog = $this->_read_log();
+		
+		// Get total download count
+		$totaldls = array_sum($dllog);
+		return $totaldls;
+	}
 
     /**
      * Returns string of file size in human-readable format
@@ -551,6 +578,9 @@ class DirectoryLister {
 
         // Get directory contents
         $files = scandir($directory);
+        
+        // Get fresh download count data
+		$dllog = $this->_read_log();
 
         // Read files/folders from the directory
         foreach ($files as $file) {
@@ -618,21 +648,29 @@ class DirectoryLister {
                     }
 
                 } elseif (!$this->_isHidden($relativePath)) {
-
                     // Add all non-hidden files to the array
-                    if ($this->_directory != '.' || $file != 'index.php') {
-
+                    if ($this->_directory != '.' || $file != 'index.php') {					
+					// Get donwload counts
+						if (@array_key_exists($relativePath,$dllog)) {
+							$downloads = $dllog[$relativePath];
+						}
+						else {
+							$downloads = '0';
+						}
                         // Build the file path
-                        $urlPath = implode('/', array_map('rawurlencode', explode('/', $relativePath)));
+                        /*
+						$urlPath = implode('/', array_map('rawurlencode', explode('/', $relativePath)));
 
                         if (is_dir($relativePath)) {
                             $urlPath = $this->containsIndex($relativePath) ? $relativePath : '?dir=' . $urlPath;
                         }
+                        */
 
                         // Add the info to the main array
                         $directoryArray[pathinfo($relativePath, PATHINFO_BASENAME)] = array(
                             'file_path'  => $relativePath,
-                            'url_path'   => $urlPath,
+                            //'url_path'   => $urlPath,
+                            'file_downloads' => is_dir($realPath) ? '-' : $downloads,
                             'file_size'  => is_dir($realPath) ? '-' : $this->getFileSize($realPath),
                             'mod_time'   => date($this->_config['date_format'], filemtime($realPath)),
                             'icon_class' => $iconClass,
@@ -653,6 +691,37 @@ class DirectoryLister {
         return $sortedArray;
 
     }
+    
+    // Function to read the log file, and return an array as (filename => downloads)
+	private function _read_log() {
+		
+		// Declare Array for holding data read from log file
+		$name = array(); // array for file name
+		$count = array(); // array for file count
+		
+		$file = @file($this->_logFile);
+		if(empty($file))
+		{
+			return null;
+		}
+			
+		// Read the entire contents of the log file into the arrays 
+		$file = fopen($this->_logFile,"r");
+		while ($data = fscanf($file,"%[ -~]\t%d\n")) 
+		{
+			list ($temp1, $temp2) = $data;	
+			array_push($name,$temp1);
+			array_push($count,$temp2);
+		}
+		fclose($file);
+		// $file_list contains data read from the log file as an array (filename => count)
+		$file_list=@array_combine($name,$count); 
+		ksort($file_list); // Sorting it in alphabetical order of key
+		
+		return $file_list;
+		
+	}
+
 
 
     /**
